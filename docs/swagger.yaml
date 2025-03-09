@@ -1,0 +1,13 @@
+basePath: /
+host: noinfo
+info:
+  contact:
+    name: Vincentius Filbert
+  description: API Service for Tryout
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: =
+  version: "1.0"
+paths: {}
+swagger: "2.0"
