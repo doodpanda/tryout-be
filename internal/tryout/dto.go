@@ -23,9 +23,24 @@ type TryoutNewRequest struct {
 }
 
 func TryoutListRequestToParam(to TryoutListRequest, param *repository.GetTryoutListFilteredParams) error {
-	param.Category = pgtype.Text{String: to.Category, Valid: false}
-	param.Difficulty = pgtype.Text{String: to.Difficulty, Valid: false}
-	param.Column4 = pgtype.Text{String: to.Search, Valid: false}
+	if to.Category == "all" || to.Category == "" {
+		param.Category = pgtype.Text{Valid: false}
+	} else {
+		param.Category = pgtype.Text{String: to.Category, Valid: true}
+	}
+
+	if to.Difficulty == "all" || to.Difficulty == "" {
+		param.Difficulty = pgtype.Text{Valid: false}
+	} else {
+		param.Difficulty = pgtype.Text{String: to.Difficulty, Valid: true}
+	}
+
+	if to.Search == "" {
+		param.Column4 = pgtype.Text{Valid: false}
+	} else {
+		param.Column4 = pgtype.Text{String: to.Search, Valid: true}
+	}
+
 	return nil
 }
 

@@ -1,15 +1,19 @@
 -- name: GetTryoutListFiltered :many
 SELECT * FROM tryout
-WHERE (is_published = true OR creator_id = $1)
-AND difficulty = $2
-AND category = $3
-AND title ILIKE '%' || $4 || '%'
+WHERE (is_published = true OR (creator_id IS NOT NULL AND creator_id = NULLIF($1, '')::UUID))
+AND (difficulty = $2 OR $2 IS NULL)
+AND (category = $3 OR $3 IS NULL)
+AND (title ILIKE '%' || $4 || '%' OR $4 IS NULL)
 ORDER BY created_at DESC;
 
 -- name: GetTryoutList :many
 SELECT * FROM tryout
-WHERE (is_published = true OR creator_id = $1)
+WHERE (is_published = true OR (creator_id IS NOT NULL AND creator_id = NULLIF($1, '')::UUID))
 ORDER BY created_at DESC;
+
+-- name: GetTryoutCreator :one
+SELECT creator_id FROM tryout
+WHERE id = $1;
 
 -- name: GetTryoutById :one
 SELECT * FROM tryout

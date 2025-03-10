@@ -136,3 +136,17 @@ WHERE id = $1;
 -- name: DeleteOption :exec
 DELETE FROM tryout_mcq_options
 WHERE id = $1;
+
+
+-- name: GetTryoutCreatorByQuestionID :one
+SELECT t.creator_id
+FROM tryout_mcq_questions q
+JOIN tryout t ON q.tryout_id = t.id
+WHERE q.id = $1
+
+UNION
+
+SELECT t.creator_id
+FROM tryout_essay_questions q
+JOIN tryout t ON q.tryout_id = t.id
+WHERE q.id = $1;

@@ -47,14 +47,26 @@ func (q *Queries) GetTryoutById(ctx context.Context, id pgtype.UUID) (*Tryout, e
 	return &i, err
 }
 
+const getTryoutCreator = `-- name: GetTryoutCreator :one
+SELECT creator_id FROM tryout
+WHERE id = $1
+`
+
+func (q *Queries) GetTryoutCreator(ctx context.Context, id pgtype.UUID) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, getTryoutCreator, id)
+	var creator_id pgtype.UUID
+	err := row.Scan(&creator_id)
+	return creator_id, err
+}
+
 const getTryoutList = `-- name: GetTryoutList :many
 SELECT id, title, description, long_description, category, duration, difficulty, passing_score, max_attempt, topics, creator_id, created_at, is_published FROM tryout
-WHERE (is_published = true OR creator_id = $1)
+WHERE (is_published = true OR (creator_id IS NOT NULL AND creator_id = NULLIF($1, '')::UUID))
 ORDER BY created_at DESC
 `
 
-func (q *Queries) GetTryoutList(ctx context.Context, creatorID pgtype.UUID) ([]*Tryout, error) {
-	rows, err := q.db.Query(ctx, getTryoutList, creatorID)
+func (q *Queries) GetTryoutList(ctx context.Context, dollar_1 interface{}) ([]*Tryout, error) {
+	rows, err := q.db.Query(ctx, getTryoutList, dollar_1)
 	if err != nil {
 		return nil, err
 	}
@@ -89,15 +101,15 @@ func (q *Queries) GetTryoutList(ctx context.Context, creatorID pgtype.UUID) ([]*
 
 const getTryoutListFiltered = `-- name: GetTryoutListFiltered :many
 SELECT id, title, description, long_description, category, duration, difficulty, passing_score, max_attempt, topics, creator_id, created_at, is_published FROM tryout
-WHERE (is_published = true OR creator_id = $1)
-AND difficulty = $2
-AND category = $3
-AND title ILIKE '%' || $4 || '%'
+WHERE (is_published = true OR (creator_id IS NOT NULL AND creator_id = NULLIF($1, '')::UUID))
+AND (difficulty = $2 OR $2 IS NULL)
+AND (category = $3 OR $3 IS NULL)
+AND (title ILIKE '%' || $4 || '%' OR $4 IS NULL)
 ORDER BY created_at DESC
 `
 
 type GetTryoutListFilteredParams struct {
-	CreatorID  pgtype.UUID
+	Column1    interface{}
 	Difficulty pgtype.Text
 	Category   pgtype.Text
 	Column4    pgtype.Text
@@ -105,7 +117,7 @@ type GetTryoutListFilteredParams struct {
 
 func (q *Queries) GetTryoutListFiltered(ctx context.Context, arg *GetTryoutListFilteredParams) ([]*Tryout, error) {
 	rows, err := q.db.Query(ctx, getTryoutListFiltered,
-		arg.CreatorID,
+		arg.Column1,
 		arg.Difficulty,
 		arg.Category,
 		arg.Column4,

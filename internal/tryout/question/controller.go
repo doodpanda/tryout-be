@@ -19,6 +19,15 @@ type Controller interface {
 	UpdateEssayQuestion(c *fiber.Ctx) error
 }
 
+func getUserID(c *fiber.Ctx) pgtype.UUID {
+	var userId pgtype.UUID
+	if err := userId.Scan(c.Context().UserValue("userID").(string)); err != nil {
+		_ = userId.Scan("00000000-0000-0000-0000-000000000000") // avoid nil pointer
+	}
+
+	return userId
+}
+
 type controller struct {
 	service Service
 }
@@ -32,6 +41,7 @@ func NewController(service Service) Controller {
 func (ctr *controller) GetQuestionsByTryoutID(c *fiber.Ctx) error {
 	var response QuestionPluralResponse
 	var tryoutID pgtype.UUID
+
 	if err := tryoutID.Scan(c.Params("id")); err != nil {
 		return c.JSON(common.CreateErrorResponse(err))
 	}
@@ -90,10 +100,13 @@ func (ctr *controller) CreateQuestion(c *fiber.Ctx) error {
 		return c.JSON(common.CreateErrorResponse(err))
 	}
 
-	id, err := ctr.service.CreateMCQQuestion(c.Context(), param)
-
+	userId, err := ctr.service.GetTryoutCreator(c.Context(), param.TryoutID)
 	if err != nil {
 		return c.JSON(common.CreateErrorResponse(err))
+	}
+
+	if userId.String() != getUserID(c).String() {
+		return c.Status(fiber.StatusUnauthorized).JSON(common.CreateErrorResponse(fiber.ErrUnauthorized))
 	}
 
 	for _, option := range req.Options {
@@ -105,7 +118,6 @@ func (ctr *controller) CreateQuestion(c *fiber.Ctx) error {
 			return c.JSON(common.CreateErrorResponse(err))
 		}
 		if option == req.Correct {
-			println("correct answer", optionID.String())
 			err := ctr.service.UpdateMCQQuestion(c.Context(), repository.UpdateMCQQuestionParams{
 				ID:            id,
 				CorrectAnswer: optionID,
@@ -136,6 +148,14 @@ func (ctr *controller) UpdateQuestion(c *fiber.Ctx) error {
 	if err := QuestionUpdateToParam(req, &param); err != nil {
 		return c.JSON(common.CreateErrorResponse(err))
 	}
+	userId, err := ctr.service.GetTryoutCreatorByQuestionID(c.Context(), param.ID)
+	if err != nil {
+		return c.JSON(common.CreateErrorResponse(err))
+	}
+
+	if userId.String() != getUserID(c).String() {
+		return c.Status(fiber.StatusUnauthorized).JSON(common.CreateErrorResponse(fiber.ErrUnauthorized))
+	}
 
 	if err := ctr.service.UpdateMCQQuestion(c.Context(), param); err != nil {
 		return c.JSON(common.CreateErrorResponse(err))
@@ -159,6 +179,15 @@ func (ctr *controller) CreateEssayQuestion(c *fiber.Ctx) error {
 		return c.JSON(common.CreateErrorResponse(err))
 	}
 
+	userId, err := ctr.service.GetTryoutCreator(c.Context(), param.TryoutID)
+	if err != nil {
+		return c.JSON(common.CreateErrorResponse(err))
+	}
+
+	if userId.String() != getUserID(c).String() {
+		return c.Status(fiber.StatusUnauthorized).JSON(common.CreateErrorResponse(fiber.ErrUnauthorized))
+	}
+
 	if err := ctr.service.CreateEssayQuestion(c.Context(), param); err != nil {
 		return c.JSON(common.CreateErrorResponse(err))
 	}
@@ -180,6 +209,15 @@ func (ctr *controller) UpdateEssayQuestion(c *fiber.Ctx) error {
 		return c.JSON(common.CreateErrorResponse(err))
 	}
 
+	userId, err := ctr.service.GetTryoutCreatorByQuestionID(c.Context(), param.ID)
+	if err != nil {
+		return c.JSON(common.CreateErrorResponse(err))
+	}
+
+	if userId.String() != getUserID(c).String() {
+		return c.Status(fiber.StatusUnauthorized).JSON(common.CreateErrorResponse(fiber.ErrUnauthorized))
+	}
+
 	if err := ctr.service.UpdateEssayQuestion(c.Context(), param); err != nil {
 		return c.JSON(common.CreateErrorResponse(err))
 	}
@@ -196,6 +234,15 @@ func (ctr *controller) DeleteQuestion(c *fiber.Ctx) error {
 		return c.JSON(common.CreateErrorResponse(err))
 	}
 
+	userId, err := ctr.service.GetTryoutCreatorByQuestionID(c.Context(), questionID)
+	if err != nil {
+		return c.JSON(common.CreateErrorResponse(err))
+	}
+
+	if userId.String() != getUserID(c).String() {
+		return c.Status(fiber.StatusUnauthorized).JSON(common.CreateErrorResponse(fiber.ErrUnauthorized))
+	}
+
 	if err := ctr.service.DeleteQuestion(c.Context(), questionID); err != nil {
 		return c.JSON(common.CreateErrorResponse(err))
 	}
@@ -210,6 +257,15 @@ func (ctr *controller) CreateMCQOption(c *fiber.Ctx) error {
 	var req repository.InsertOptionParams
 	if err := c.BodyParser(&req); err != nil {
 		return c.JSON(common.CreateErrorResponse(err))
+	}
+
+	userId, err := ctr.service.GetTryoutCreatorByQuestionID(c.Context(), req.QuestionID)
+	if err != nil {
+		return c.JSON(common.CreateErrorResponse(err))
+	}
+
+	if userId.String() != getUserID(c).String() {
+		return c.Status(fiber.StatusUnauthorized).JSON(common.CreateErrorResponse(fiber.ErrUnauthorized))
 	}
 
 	id, err := ctr.service.CreateMCQOption(c.Context(), req)

@@ -20,6 +20,15 @@ type controller struct {
 	service Service
 }
 
+func getUserID(c *fiber.Ctx) pgtype.UUID {
+	var userId pgtype.UUID
+	if err := userId.Scan(c.Context().UserValue("userID").(string)); err != nil {
+		_ = userId.Scan("00000000-0000-0000-0000-000000000000") // avoid nil pointer
+	}
+
+	return userId
+}
+
 func NewController(service Service) Controller {
 	return &controller{
 		service: service,
@@ -29,6 +38,9 @@ func NewController(service Service) Controller {
 func (ctr *controller) GetTryoutListFiltered(c *fiber.Ctx) error {
 	var req TryoutListRequest
 	var param repository.GetTryoutListFilteredParams
+	userId := getUserID(c)
+
+	param.Column1 = userId
 	if err := c.BodyParser(&req); err != nil {
 		return c.JSON(common.CreateErrorResponse(err))
 	}
@@ -72,8 +84,8 @@ func (ctr *controller) GetTryoutListFiltered(c *fiber.Ctx) error {
 }
 
 func (ctr *controller) GetTryoutList(c *fiber.Ctx) error {
-	uuid := pgtype.UUID{}
-	uuid.Scan("aa645725-37e1-41ed-a7a9-71f428b05b1a")
+	var uuid pgtype.UUID
+
 	tryouts, err := ctr.service.GetTryoutList(c.Context(), uuid)
 	if err != nil {
 		return c.JSON(common.CreateErrorResponse(err))
@@ -110,15 +122,18 @@ func (ctr *controller) GetTryoutList(c *fiber.Ctx) error {
 
 func (ctr *controller) GetTryoutById(c *fiber.Ctx) error {
 	var response TryoutListResponse
-	uuid := pgtype.UUID{}
-	uuid.Scan(c.Params("id"))
-	tryout, err := ctr.service.GetTryoutById(c.Context(), uuid)
+	var uuid pgtype.UUID
 
-	if err := TryoutResponse(&response, tryout); err != nil {
+	if err := uuid.Scan(c.Params("id")); err != nil {
 		return c.JSON(common.CreateErrorResponse(err))
 	}
 
+	tryout, err := ctr.service.GetTryoutById(c.Context(), uuid)
 	if err != nil {
+		return c.JSON(common.CreateErrorResponse(err))
+	}
+
+	if err := TryoutResponse(&response, tryout); err != nil {
 		return c.JSON(common.CreateErrorResponse(err))
 	}
 
@@ -132,7 +147,12 @@ func (ctr *controller) GetTryoutById(c *fiber.Ctx) error {
 func (ctr *controller) CreateNewTryout(c *fiber.Ctx) error {
 	var req TryoutNewRequest
 	var param repository.InsertTryoutParams
-	param.CreatorID.Scan("aa645725-37e1-41ed-a7a9-71f428b05b1a")
+	userId := getUserID(c)
+	if userId.String() == "00000000-0000-0000-0000-000000000000" {
+		return c.Status(fiber.StatusUnauthorized).JSON(common.CreateErrorResponse(fiber.ErrUnauthorized))
+	}
+
+	param.CreatorID = getUserID(c)
 
 	if err := c.BodyParser(&req); err != nil {
 		return c.JSON(common.CreateErrorResponse(err))
@@ -164,6 +184,15 @@ func (ctr *controller) UpdateTryout(c *fiber.Ctx) error {
 		return c.JSON(common.CreateErrorResponse(err))
 	}
 
+	userId, err := ctr.service.GetTryoutCreator(c.Context(), param.ID)
+	if err != nil {
+		return c.JSON(common.CreateErrorResponse(err))
+	}
+
+	if userId.String() != getUserID(c).String() {
+		return c.Status(fiber.StatusUnauthorized).JSON(common.CreateErrorResponse(fiber.ErrUnauthorized))
+	}
+
 	if err := TryoutUpdateRequestToParam(req, &param); err != nil {
 		return c.JSON(common.CreateErrorResponse(err))
 	}
@@ -183,6 +212,16 @@ func (ctr *controller) DeleteTryout(c *fiber.Ctx) error {
 	if err := uuid.Scan(c.Params("id")); err != nil {
 		return c.JSON(common.CreateErrorResponse(err))
 	}
+
+	userId, err := ctr.service.GetTryoutCreator(c.Context(), uuid)
+	if err != nil {
+		return c.JSON(common.CreateErrorResponse(err))
+	}
+
+	if userId.String() != getUserID(c).String() {
+		return c.Status(fiber.StatusUnauthorized).JSON(common.CreateErrorResponse(fiber.ErrUnauthorized))
+	}
+
 	if err := ctr.service.DeleteTryout(c.Context(), uuid); err != nil {
 		return c.JSON(common.CreateErrorResponse(err))
 	}

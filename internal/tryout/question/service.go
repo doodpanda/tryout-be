@@ -16,6 +16,8 @@ type Service interface {
 	UpdateEssayQuestion(ctx context.Context, param repository.UpdateEssayQuestionParams) error
 	DeleteQuestion(ctx context.Context, questionID pgtype.UUID) error
 	CreateMCQOption(ctx context.Context, param repository.InsertOptionParams) (pgtype.UUID, error)
+	GetTryoutCreator(ctx context.Context, tryoutID pgtype.UUID) (pgtype.UUID, error)
+	GetTryoutCreatorByQuestionID(ctx context.Context, questionID pgtype.UUID) (pgtype.UUID, error)
 }
 
 type service struct {
@@ -62,4 +64,12 @@ func (s *service) DeleteQuestion(ctx context.Context, questionID pgtype.UUID) er
 
 func (s *service) CreateMCQOption(ctx context.Context, param repository.InsertOptionParams) (pgtype.UUID, error) {
 	return s.repo.InsertOption(ctx, &param)
+}
+
+func (s *service) GetTryoutCreator(ctx context.Context, tryoutID pgtype.UUID) (pgtype.UUID, error) {
+	return s.repo.GetTryoutCreator(ctx, tryoutID)
+}
+
+func (s *service) GetTryoutCreatorByQuestionID(ctx context.Context, questionID pgtype.UUID) (pgtype.UUID, error) {
+	return s.repo.GetTryoutCreatorByQuestionID(ctx, questionID)
 }

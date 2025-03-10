@@ -4,6 +4,8 @@ import (
 	"github.com/doodpanda/tryout-backend/internal/test"
 	"github.com/doodpanda/tryout-backend/internal/tryout"
 	"github.com/doodpanda/tryout-backend/internal/tryout/question"
+	"github.com/doodpanda/tryout-backend/internal/user"
+	"github.com/doodpanda/tryout-backend/middleware"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -22,15 +24,17 @@ func NewApp(cfg *appConfig) *fiber.App {
 	app := fiber.New(fiber.Config{
 		Prefork: cfg.prod,
 	})
-
-	app.Use(recover.New())
-	app.Use(logger.New())
 	app.Use(cors.New(cors.Config{
 		AllowOrigins:     "http://localhost:3000",
-		AllowHeaders:     "*",
+		AllowHeaders:     "",
 		AllowMethods:     "*",
 		AllowCredentials: true,
 	}))
+
+	app.Use(recover.New())
+	app.Use(logger.New())
+
+	app.Use(middleware.AuthMiddleware)
 
 	app.Get("/healthcheck", func(c *fiber.Ctx) error {
 		return c.Status(200).SendString("hello from minecart!")
@@ -54,6 +58,7 @@ func NewApp(cfg *appConfig) *fiber.App {
 	test.App(v1, cfg.db)
 	tryout.App(v1, cfg.db)
 	question.App(v1, cfg.db)
+	user.App(v1, cfg.db)
 
 	return app
 }

@@ -17,13 +17,17 @@ type Querier interface {
 	DeleteTryout(ctx context.Context, id pgtype.UUID) error
 	GetQuestionByID(ctx context.Context, id pgtype.UUID) ([]byte, error)
 	GetTryoutById(ctx context.Context, id pgtype.UUID) (*Tryout, error)
-	GetTryoutList(ctx context.Context, creatorID pgtype.UUID) ([]*Tryout, error)
+	GetTryoutCreator(ctx context.Context, id pgtype.UUID) (pgtype.UUID, error)
+	GetTryoutCreatorByQuestionID(ctx context.Context, id pgtype.UUID) (pgtype.UUID, error)
+	GetTryoutList(ctx context.Context, dollar_1 interface{}) ([]*Tryout, error)
 	GetTryoutListFiltered(ctx context.Context, arg *GetTryoutListFilteredParams) ([]*Tryout, error)
 	GetTryoutQuestionsByTryoutId(ctx context.Context, tryoutID pgtype.UUID) ([][]byte, error)
 	InsertEssayQuestion(ctx context.Context, arg *InsertEssayQuestionParams) error
 	InsertMCQQuestion(ctx context.Context, arg *InsertMCQQuestionParams) (pgtype.UUID, error)
 	InsertOption(ctx context.Context, arg *InsertOptionParams) (pgtype.UUID, error)
 	InsertTryout(ctx context.Context, arg *InsertTryoutParams) error
+	InsertUser(ctx context.Context, arg *InsertUserParams) error
+	LoginUser(ctx context.Context, email string) (*LoginUserRow, error)
 	UpdateEssayQuestion(ctx context.Context, arg *UpdateEssayQuestionParams) error
 	UpdateMCQQuestion(ctx context.Context, arg *UpdateMCQQuestionParams) error
 	UpdateOption(ctx context.Context, arg *UpdateOptionParams) error

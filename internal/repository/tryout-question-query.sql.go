@@ -96,6 +96,27 @@ func (q *Queries) GetQuestionByID(ctx context.Context, id pgtype.UUID) ([]byte, 
 	return question, err
 }
 
+const getTryoutCreatorByQuestionID = `-- name: GetTryoutCreatorByQuestionID :one
+SELECT t.creator_id
+FROM tryout_mcq_questions q
+JOIN tryout t ON q.tryout_id = t.id
+WHERE q.id = $1
+
+UNION
+
+SELECT t.creator_id
+FROM tryout_essay_questions q
+JOIN tryout t ON q.tryout_id = t.id
+WHERE q.id = $1
+`
+
+func (q *Queries) GetTryoutCreatorByQuestionID(ctx context.Context, id pgtype.UUID) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, getTryoutCreatorByQuestionID, id)
+	var creator_id pgtype.UUID
+	err := row.Scan(&creator_id)
+	return creator_id, err
+}
+
 const getTryoutQuestionsByTryoutId = `-- name: GetTryoutQuestionsByTryoutId :many
 WITH mcq_questions AS (
     SELECT

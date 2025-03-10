@@ -28,7 +28,7 @@ func main() {
 		panic("invalid database type")
 	}
 
-	prod := config.GetStageStatus() == config.EnvironmentProduction
+	prod := false
 
 	app := NewApp(&appConfig{
 		prod: prod,
