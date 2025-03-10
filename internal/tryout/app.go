@@ -19,4 +19,7 @@ func App(app fiber.Router, db *pgxpool.Pool) {
 	r.Post("/", ctr.GetTryoutListFiltered)
 	r.Get("/", ctr.GetTryoutList)
 	r.Get("/:id", ctr.GetTryoutById)
+	r.Post("/new", ctr.CreateNewTryout)
+	r.Put("/:id", ctr.UpdateTryout)
+	r.Delete("/:id", ctr.DeleteTryout)
 }

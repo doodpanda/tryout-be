@@ -11,6 +11,16 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const deleteTryout = `-- name: DeleteTryout :exec
+DELETE FROM tryout
+WHERE id = $1
+`
+
+func (q *Queries) DeleteTryout(ctx context.Context, id pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, deleteTryout, id)
+	return err
+}
+
 const getTryoutById = `-- name: GetTryoutById :one
 SELECT id, title, description, long_description, category, duration, difficulty, passing_score, max_attempt, topics, creator_id, created_at, is_published FROM tryout
 WHERE id = $1
@@ -130,4 +140,76 @@ func (q *Queries) GetTryoutListFiltered(ctx context.Context, arg *GetTryoutListF
 		return nil, err
 	}
 	return items, nil
+}
+
+const insertTryout = `-- name: InsertTryout :exec
+INSERT INTO tryout (creator_id, title, description, long_description, difficulty, duration, topics, category, is_published, created_at)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())
+`
+
+type InsertTryoutParams struct {
+	CreatorID       pgtype.UUID
+	Title           string
+	Description     pgtype.Text
+	LongDescription pgtype.Text
+	Difficulty      pgtype.Text
+	Duration        pgtype.Int4
+	Topics          []string
+	Category        pgtype.Text
+	IsPublished     bool
+}
+
+func (q *Queries) InsertTryout(ctx context.Context, arg *InsertTryoutParams) error {
+	_, err := q.db.Exec(ctx, insertTryout,
+		arg.CreatorID,
+		arg.Title,
+		arg.Description,
+		arg.LongDescription,
+		arg.Difficulty,
+		arg.Duration,
+		arg.Topics,
+		arg.Category,
+		arg.IsPublished,
+	)
+	return err
+}
+
+const updateTryout = `-- name: UpdateTryout :exec
+UPDATE tryout
+SET title = $2,
+    description = $3,
+    long_description = $4,
+    difficulty = $5,
+    category = $6,
+    is_published = $7,
+    duration = $8,
+    topics = $9
+WHERE id = $1
+`
+
+type UpdateTryoutParams struct {
+	ID              pgtype.UUID
+	Title           string
+	Description     pgtype.Text
+	LongDescription pgtype.Text
+	Difficulty      pgtype.Text
+	Category        pgtype.Text
+	IsPublished     bool
+	Duration        pgtype.Int4
+	Topics          []string
+}
+
+func (q *Queries) UpdateTryout(ctx context.Context, arg *UpdateTryoutParams) error {
+	_, err := q.db.Exec(ctx, updateTryout,
+		arg.ID,
+		arg.Title,
+		arg.Description,
+		arg.LongDescription,
+		arg.Difficulty,
+		arg.Category,
+		arg.IsPublished,
+		arg.Duration,
+		arg.Topics,
+	)
+	return err
 }

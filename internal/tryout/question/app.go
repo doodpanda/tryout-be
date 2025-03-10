@@ -7,7 +7,7 @@ import (
 )
 
 func App(app fiber.Router, db *pgxpool.Pool) {
-	r := app.Group("/tryout/questions")
+	r := app.Group("/tryout")
 	var (
 		repo    = repository.New(db)
 		service = NewService(repo)
@@ -15,5 +15,9 @@ func App(app fiber.Router, db *pgxpool.Pool) {
 	ctr := NewController(service)
 
 	// Route listing
-	r.Get("/:id", ctr.GetQuestionsByTryoutID)
+	r.Get("/:id/questions", ctr.GetQuestionsByTryoutID)
+	r.Get("/:id/questions/:question_id", ctr.GetSingleQuestion)
+	r.Post("/:id/questions/", ctr.CreateQuestion)
+	r.Put("/:id/questions/:question_id", ctr.UpdateQuestion)
+	r.Delete("/:id/questions/:question_id", ctr.DeleteQuestion)
 }

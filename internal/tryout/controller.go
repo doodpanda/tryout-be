@@ -11,6 +11,9 @@ type Controller interface {
 	GetTryoutList(c *fiber.Ctx) error
 	GetTryoutListFiltered(c *fiber.Ctx) error
 	GetTryoutById(c *fiber.Ctx) error
+	CreateNewTryout(c *fiber.Ctx) error
+	UpdateTryout(c *fiber.Ctx) error
+	DeleteTryout(c *fiber.Ctx) error
 }
 
 type controller struct {
@@ -123,5 +126,69 @@ func (ctr *controller) GetTryoutById(c *fiber.Ctx) error {
 		OK:      true,
 		Message: "fetch tryout success",
 		Data:    TryoutListSingle{Tryout: response},
+	})
+}
+
+func (ctr *controller) CreateNewTryout(c *fiber.Ctx) error {
+	var req TryoutNewRequest
+	var param repository.InsertTryoutParams
+	param.CreatorID.Scan("aa645725-37e1-41ed-a7a9-71f428b05b1a")
+
+	if err := c.BodyParser(&req); err != nil {
+		return c.JSON(common.CreateErrorResponse(err))
+	}
+
+	if err := TryoutNewRequestToParam(req, &param); err != nil {
+		return c.JSON(common.CreateErrorResponse(err))
+	}
+
+	if err := ctr.service.CreateTryout(c.Context(), param); err != nil {
+		return c.JSON(common.CreateErrorResponse(err))
+	}
+
+	return c.JSON(common.GeneralSuccessResponse{
+		OK:      true,
+		Message: "create new tryout success",
+	})
+}
+
+func (ctr *controller) UpdateTryout(c *fiber.Ctx) error {
+	var req TryoutNewRequest
+	var param repository.UpdateTryoutParams
+
+	if err := param.ID.Scan(c.Params("id")); err != nil {
+		return c.JSON(common.CreateErrorResponse(err))
+	}
+
+	if err := c.BodyParser(&req); err != nil {
+		return c.JSON(common.CreateErrorResponse(err))
+	}
+
+	if err := TryoutUpdateRequestToParam(req, &param); err != nil {
+		return c.JSON(common.CreateErrorResponse(err))
+	}
+
+	if err := ctr.service.UpdateTryout(c.Context(), param); err != nil {
+		return c.JSON(common.CreateErrorResponse(err))
+	}
+
+	return c.JSON(common.GeneralSuccessResponse{
+		OK:      true,
+		Message: "update tryout success",
+	})
+}
+
+func (ctr *controller) DeleteTryout(c *fiber.Ctx) error {
+	uuid := pgtype.UUID{}
+	if err := uuid.Scan(c.Params("id")); err != nil {
+		return c.JSON(common.CreateErrorResponse(err))
+	}
+	if err := ctr.service.DeleteTryout(c.Context(), uuid); err != nil {
+		return c.JSON(common.CreateErrorResponse(err))
+	}
+
+	return c.JSON(common.GeneralSuccessResponse{
+		OK:      true,
+		Message: "delete tryout success",
 	})
 }

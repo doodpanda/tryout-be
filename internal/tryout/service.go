@@ -11,6 +11,9 @@ type Service interface {
 	GetTryoutList(ctx context.Context, param pgtype.UUID) ([]*repository.Tryout, error)
 	GetTryoutListFiltered(ctx context.Context, param repository.GetTryoutListFilteredParams) ([]*repository.Tryout, error)
 	GetTryoutById(ctx context.Context, tryoutID pgtype.UUID) (*repository.Tryout, error)
+	CreateTryout(ctx context.Context, param repository.InsertTryoutParams) error
+	UpdateTryout(ctx context.Context, param repository.UpdateTryoutParams) error
+	DeleteTryout(ctx context.Context, tryoutID pgtype.UUID) error
 }
 
 type service struct {
@@ -33,4 +36,16 @@ func (s *service) GetTryoutListFiltered(ctx context.Context, param repository.Ge
 
 func (s *service) GetTryoutById(ctx context.Context, tryoutID pgtype.UUID) (*repository.Tryout, error) {
 	return s.repo.GetTryoutById(ctx, tryoutID)
+}
+
+func (s *service) CreateTryout(ctx context.Context, param repository.InsertTryoutParams) error {
+	return s.repo.InsertTryout(ctx, &param)
+}
+
+func (s *service) UpdateTryout(ctx context.Context, param repository.UpdateTryoutParams) error {
+	return s.repo.UpdateTryout(ctx, &param)
+}
+
+func (s *service) DeleteTryout(ctx context.Context, tryoutID pgtype.UUID) error {
+	return s.repo.DeleteTryout(ctx, tryoutID)
 }

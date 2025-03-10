@@ -34,7 +34,7 @@ CREATE TABLE "tryout_mcq_questions" (
     "points" INTEGER NOT NULL,
     "created_at" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    FOREIGN KEY ("tryout_id") REFERENCES "tryout" ("id")
+    FOREIGN KEY ("tryout_id") REFERENCES "tryout" ("id") ON DELETE CASCADE
 );
 
 -- CreateTable
@@ -45,8 +45,8 @@ CREATE TABLE "tryout_attempts" (
     "score" INTEGER NOT NULL,
     "created_at" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    FOREIGN KEY ("tryout_id") REFERENCES "tryout" ("id"),
-    FOREIGN KEY ("user_id") REFERENCES "user" ("id")
+    FOREIGN KEY ("tryout_id") REFERENCES "tryout" ("id") ON DELETE CASCADE,
+    FOREIGN KEY ("user_id") REFERENCES "user" ("id") ON DELETE CASCADE
 );
 
 -- CreateTable
@@ -70,11 +70,11 @@ CREATE TABLE "tryout_mcq_attempts" (
     "score" INTEGER NOT NULL,
     "created_at" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    FOREIGN KEY ("tryout_id") REFERENCES "tryout" ("id"),
-    FOREIGN KEY ("user_id") REFERENCES "user" ("id"),
-    FOREIGN KEY ("question_id") REFERENCES "tryout_mcq_questions" ("id"),
-    FOREIGN KEY ("answer") REFERENCES "tryout_mcq_options" ("id"),
-    FOREIGN KEY ("tryout_attempt_id") REFERENCES "tryout_attempts" ("id")
+    FOREIGN KEY ("tryout_id") REFERENCES "tryout" ("id") ON DELETE CASCADE,
+    FOREIGN KEY ("user_id") REFERENCES "user" ("id") ON DELETE CASCADE, 
+    FOREIGN KEY ("question_id") REFERENCES "tryout_mcq_questions" ("id") ON DELETE CASCADE,
+    FOREIGN KEY ("answer") REFERENCES "tryout_mcq_options" ("id") ON DELETE CASCADE,
+    FOREIGN KEY ("tryout_attempt_id") REFERENCES "tryout_attempts" ("id") ON DELETE CASCADE
 );
 
 -- CreateTable
@@ -85,7 +85,7 @@ CREATE TABLE "tryout_essay_questions" (
     "points" INTEGER NOT NULL,
     "created_at" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    FOREIGN KEY ("tryout_id") REFERENCES "tryout" ("id")
+    FOREIGN KEY ("tryout_id") REFERENCES "tryout" ("id") ON DELETE CASCADE
 );
 
 -- CreateTable
@@ -99,8 +99,8 @@ CREATE TABLE "tryout_essay_attempts" (
     "score" INTEGER NOT NULL,
     "created_at" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    FOREIGN KEY ("tryout_id") REFERENCES "tryout" ("id"),
-    FOREIGN KEY ("user_id") REFERENCES "user" ("id"),
-    FOREIGN KEY ("question_id") REFERENCES "tryout_essay_questions" ("id"),
-    FOREIGN KEY ("tryout_attempt_id") REFERENCES "tryout_attempts" ("id")
+    FOREIGN KEY ("tryout_id") REFERENCES "tryout" ("id") ON DELETE CASCADE,
+    FOREIGN KEY ("user_id") REFERENCES "user" ("id") ON DELETE CASCADE,
+    FOREIGN KEY ("question_id") REFERENCES "tryout_essay_questions" ("id") ON DELETE CASCADE,
+    FOREIGN KEY ("tryout_attempt_id") REFERENCES "tryout_attempts" ("id") ON DELETE CASCADE
 );

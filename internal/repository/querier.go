@@ -11,10 +11,23 @@ import (
 )
 
 type Querier interface {
+	DeleteEssayQuestion(ctx context.Context, id pgtype.UUID) error
+	DeleteOption(ctx context.Context, id pgtype.UUID) error
+	DeleteQuestion(ctx context.Context, id pgtype.UUID) error
+	DeleteTryout(ctx context.Context, id pgtype.UUID) error
+	GetQuestionByID(ctx context.Context, id pgtype.UUID) ([]byte, error)
 	GetTryoutById(ctx context.Context, id pgtype.UUID) (*Tryout, error)
 	GetTryoutList(ctx context.Context, creatorID pgtype.UUID) ([]*Tryout, error)
 	GetTryoutListFiltered(ctx context.Context, arg *GetTryoutListFilteredParams) ([]*Tryout, error)
 	GetTryoutQuestionsByTryoutId(ctx context.Context, tryoutID pgtype.UUID) ([][]byte, error)
+	InsertEssayQuestion(ctx context.Context, arg *InsertEssayQuestionParams) error
+	InsertMCQQuestion(ctx context.Context, arg *InsertMCQQuestionParams) (pgtype.UUID, error)
+	InsertOption(ctx context.Context, arg *InsertOptionParams) (pgtype.UUID, error)
+	InsertTryout(ctx context.Context, arg *InsertTryoutParams) error
+	UpdateEssayQuestion(ctx context.Context, arg *UpdateEssayQuestionParams) error
+	UpdateMCQQuestion(ctx context.Context, arg *UpdateMCQQuestionParams) error
+	UpdateOption(ctx context.Context, arg *UpdateOptionParams) error
+	UpdateTryout(ctx context.Context, arg *UpdateTryoutParams) error
 }
 
 var _ Querier = (*Queries)(nil)
