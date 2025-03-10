@@ -1,4 +1,3 @@
-```
 # Tryout Backend API
 
 This repository contains the backend API for the Tryout application. The API is built using Go and the Fiber web framework, SQLC for Database. It provides endpoints for managing tryouts, including creating, updating, deleting, and fetching tryout details.
